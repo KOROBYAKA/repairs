@@ -25,13 +25,22 @@ def count_repairs(batches):
 
 def test(fec_list, nodes):
     for FEC_SIZE in fec_list:
+        print(f'FEC Size: {FEC_SIZE}')
         losses = [1] * 32
-        for x in range(5, 11):
+        for x in range(11, 17):
             losses[x] = 0
         batches = [Batch(FEC_SIZE) for x in range(0, nodes)]
         for x in range(0, 31):
             send_shreds(batches, FEC_SIZE, losses[x])
-        print('repairs:', count_repairs(batches))
+        print(f'20% repairs:{count_repairs(batches)}')
+
+        losses = [1] * 32
+        for x in [5,6,7,21,22,23,24]:
+            losses[x] = 0
+        batches = [Batch(FEC_SIZE) for x in range(0, nodes)]
+        for x in range(0, 31):
+            send_shreds(batches, FEC_SIZE, losses[x])
+        print('10%-10% repairs:', count_repairs(batches))
 
 
 def main():
