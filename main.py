@@ -1,22 +1,20 @@
 from numpy import random
 import matplotlib.pyplot as plt
-import seaborn as sns
 from batch import Batch
 
-def listmaker(n):
-    listofones = [1] * n
-    return listofones
 
-
-
-def send_shreds(batches, FEC_SIZE):
-
+def send_shreds(batches, FEC_SIZE, flag):
     for batch in batches:
-        amount = random.randint(0,int(FEC_SIZE/10))
-        if (FEC_SIZE - 10) <= batch.shreds_rcv:
-            batch.shreds_rcv = FEC_SIZE
+        amount = random.randint(0,int(FEC_SIZE/16))
+        if (batch.shreds_snd + amount) >= FEC_SIZE:
+            batch.transit_cache = FEC_SIZE - batch.shreds_snd
+            batch.shreds_snd = FEC_SIZE
         else:
-            batch.rcv_shreds(amount)
+            batch.send_shreds(amount)
+
+        if flag:
+            batch.rcv_shreds()
+        batch.transit_cache = 0
 
 
 def count_repairs(batches):
@@ -25,29 +23,21 @@ def count_repairs(batches):
         repairs += batch.count_repairs()
     return repairs
 
+def test(fec_list, nodes):
+    for FEC_SIZE in fec_list:
+        losses = [1] * 32
+        for x in range(5, 11):
+            losses[x] = 0
+        batches = [Batch(FEC_SIZE) for x in range(0, nodes)]
+        for x in range(0, 31):
+            send_shreds(batches, FEC_SIZE, losses[x])
+        print('repairs:', count_repairs(batches))
+
+
 def main():
-    FEC_SIZE = 64
-    losses = listmaker(16)
-    for x in range(5,8):
-        losses[x] = 0
-    batches = [Batch(x, FEC_SIZE) for x in range(0,10000)]
-
-    for x in range (0,15):
-        if losses[x] : send_shreds(batches,FEC_SIZE)
-    print('reps:',count_repairs(batches))
-
-    FEC_SIZE = 128
-
-    plt.show()
-
-    losses = listmaker(16)
-    for x in range(5,8):
-        losses[x] = 0
-    batches = [Batch(x, FEC_SIZE) for x in range(0,10000)]
-    
-    for x in range (0,15):
-        if losses[x] : send_shreds(batches,FEC_SIZE)
-    print('reps:',count_repairs(batches))
+    nodes = 100000
+    fec_list = [32,64,128,256,512]
+    test(fec_list, nodes)
 
 
 if __name__ == "__main__":              
